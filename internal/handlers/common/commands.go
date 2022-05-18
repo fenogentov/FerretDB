@@ -141,6 +141,10 @@ var Commands = map[string]Command{
 			`specifically the state of authenticated users and their available permissions.`,
 		Handler: (Handler).MsgConnectionStatus,
 	},
+	"listIndexes": {
+		Help:    "Returns information about the indexes on the specified collection.",
+		Handler: (Handler).MsgListIndexes,
+	},
 
 	"listCommands": {
 		Help:    "Returns a list of currently supported commands.",

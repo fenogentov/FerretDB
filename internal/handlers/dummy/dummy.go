@@ -166,6 +166,11 @@ func (h *Handler) MsgConnectionStatus(ctx context.Context, msg *wire.OpMsg) (*wi
 	return nil, common.NewErrorMsg(common.ErrNotImplemented, "I'm a dummy, not a handler")
 }
 
+// MsgListIndexes returns information about the indexes on the specified collection.
+func (h *Handler) MsgListIndexes(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error) {
+	return nil, common.NewErrorMsg(common.ErrNotImplemented, "I'm a dummy, not a handler")
+}
+
 // Close prepares handler for graceful shutdown: closes connections, channels etc.
 func (h *Handler) Close() {}
 

@@ -104,6 +104,9 @@ type Handler interface {
 	// specifically the state of authenticated users and their available permissions.
 	MsgConnectionStatus(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error)
 
+	// MsgListIndexes returns information about the indexes on the specified collection.
+	MsgListIndexes(ctx context.Context, msg *wire.OpMsg) (*wire.OpMsg, error)
+
 	// Close prepares handler for graceful shutdown: closes connections, channels etc.
 	Close()
 }
