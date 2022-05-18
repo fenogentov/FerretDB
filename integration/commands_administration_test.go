@@ -426,43 +426,52 @@ func TestStatisticsCommands(t *testing.T) {
 
 func TestCommandsAdministrationListIndexes(t *testing.T) {
 	t.Parallel()
-	ctx, collection := setupWithOpts(t, &setupOpts{
-		databaseName: "admin",
-	})
+	ctx, collection := setup(t)
+	db := collection.Database()
 
-	for name, tc := range map[string]struct {
-		command    bson.D
-		expected   map[string]any
-		unexpected []string
-		err        *mongo.CommandError
-	}{
-		"AllParameters_1": {
-			command: bson.D{{"listIndexes", "*"}},
-		},
-	} {
-		name, tc := name, tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	fmt.Println(db, collection)
 
-			var actual bson.D
-			err := collection.Database().RunCommand(ctx, tc.command).Decode(&actual)
-			fmt.Println(actual, err)
-			// if tc.err != nil {
-			// 	AssertEqualError(t, *tc.err, err)
-			// 	return
-			// }
-			// require.NoError(t, err)
+	var actual bson.D
+	err := db.RunCommand(ctx, bson.D{{"listIndexes", "actor"}}).Decode(&actual)
+	fmt.Println(actual, err)
 
-			// m := actual.Map()
-			// k := CollectKeys(t, actual)
+	// ctx, collection := setupWithOpts(t, &setupOpts{
+	// 	databaseName: "admin",
+	// })
 
-			// for key, item := range tc.expected {
-			// 	assert.Contains(t, k, key)
-			// 	assert.Equal(t, m[key], item)
-			// }
-			// for _, key := range tc.unexpected {
-			// 	assert.NotContains(t, k, key)
-			// }
-		})
-	}
+	// for name, tc := range map[string]struct {
+	// 	command    bson.D
+	// 	expected   map[string]any
+	// 	unexpected []string
+	// 	err        *mongo.CommandError
+	// }{
+	// 	"AllParameters_1": {
+	// 		command: bson.D{{"listIndexes", "*"}},
+	// 	},
+	// } {
+	// 	name, tc := name, tc
+	// 	t.Run(name, func(t *testing.T) {
+	// 		t.Parallel()
+
+	// 		var actual bson.D
+	// 		err := collection.Database().RunCommand(ctx, tc.command).Decode(&actual)
+	// 		fmt.Println(actual, err)
+	// if tc.err != nil {
+	// 	AssertEqualError(t, *tc.err, err)
+	// 	return
+	// }
+	// require.NoError(t, err)
+
+	// m := actual.Map()
+	// k := CollectKeys(t, actual)
+
+	// for key, item := range tc.expected {
+	// 	assert.Contains(t, k, key)
+	// 	assert.Equal(t, m[key], item)
+	// }
+	// for _, key := range tc.unexpected {
+	// 	assert.NotContains(t, k, key)
+	// }
+	//		})
+	//	}
 }
