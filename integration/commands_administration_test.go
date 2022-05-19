@@ -461,6 +461,8 @@ func TestCommandsAdministrationListIndexes(t *testing.T) {
 		bson.D{{"_id", "MinInt64_overflowVerge"}, {"value", -9.223372036854776832e+18}},
 		bson.D{{"_id", "MinInt64_overflow"}, {"value", -9.223372036854776833e+18}},
 	})
+	require.NoError(t, err)
+
 	fmt.Println("err insert", err)
 
 	//	t.Parallel()
@@ -476,8 +478,13 @@ func TestCommandsAdministrationListIndexes(t *testing.T) {
 	fmt.Printf("*DB > %+v\n", db)
 	fmt.Printf("*collection > %+v\n", collection)
 
+	d := collection.Database()
+	fmt.Printf("%+v\n", d)
+	r := d.RunCommand(ctx, bson.D{{"listIndexes", ""}})
+	fmt.Printf("%+v\n", r)
+
 	var actual bson.D
-	err = collection.Database().RunCommand(ctx, bson.D{{"listIndexes", collection}}).Decode(&actual)
+	err = collection.Database().RunCommand(ctx, bson.D{{"listIndexes", "collection"}}).Decode(&actual)
 
 	fmt.Println(err)
 	fmt.Printf("*actual > %+v", actual)
