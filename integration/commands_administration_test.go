@@ -425,15 +425,62 @@ func TestStatisticsCommands(t *testing.T) {
 }
 
 func TestCommandsAdministrationListIndexes(t *testing.T) {
-	t.Parallel()
-	ctx, collection := setup(t)
-	db := collection.Database()
+	db := "admin"
+	ctx, collection := setupWithOpts(t, &setupOpts{
+		databaseName: db,
+	})
 
-	fmt.Println(db, collection)
+	_, err := collection.InsertMany(ctx, []any{
+		bson.D{{"_id", "Zero"}, {"value", 0}},
+		bson.D{{"_id", "NegativeZero"}, {"value", math.Copysign(0, -1)}},
+		bson.D{{"_id", "Int32_1"}, {"value", int32(4080)}},
+		bson.D{{"_id", "Int32_2"}, {"value", int32(1048560)}},
+		bson.D{{"_id", "Int32_3"}, {"value", int32(268435440)}},
+		bson.D{{"_id", "Int64_1"}, {"value", int64(1099511628000)}},
+		bson.D{{"_id", "Int64_2"}, {"value", int64(281474976700000)}},
+		bson.D{{"_id", "Int64_3"}, {"value", int64(72057594040000000)}},
+		bson.D{{"_id", "Nil"}, {"value", nil}},
+		bson.D{{"_id", "String"}, {"value", "12"}},
+		bson.D{{"_id", "NaN"}, {"value", math.NaN()}},
+		bson.D{{"_id", "Infinity"}, {"value", math.Inf(0)}},
+		bson.D{{"_id", "InfinityNegative"}, {"value", math.Inf(-1)}},
+		bson.D{{"_id", "InfinityPositive"}, {"value", math.Inf(+1)}},
+		bson.D{{"_id", "SmallestNonzeroFloat64"}, {"value", math.SmallestNonzeroFloat64}},
+		bson.D{{"_id", "PositiveNumber"}, {"value", 123456789}},
+		bson.D{{"_id", "NegativeNumber"}, {"value", -123456789}},
+		bson.D{{"_id", "MaxInt64"}, {"value", math.MaxInt64}},
+		bson.D{{"_id", "MaxInt64_float"}, {"value", float64(math.MaxInt64)}},
+		bson.D{{"_id", "MaxInt64_plus"}, {"value", float64(math.MaxInt64 + 1)}},
+		bson.D{{"_id", "MaxInt64_overflowVerge"}, {"value", 9.223372036854776832e+18}},
+		bson.D{{"_id", "MaxInt64_overflow"}, {"value", 9.223372036854776833e+18}},
+		bson.D{{"_id", "MaxFloat64_minus"}, {"value", 1.79769e+307}},
+		bson.D{{"_id", "MaxFloat64"}, {"value", math.MaxFloat64}},
+		bson.D{{"_id", "MinInt64"}, {"value", math.MinInt64}},
+		bson.D{{"_id", "MinInt64_float"}, {"value", float64(math.MinInt64)}},
+		bson.D{{"_id", "MinInt64_minus"}, {"value", float64(math.MinInt64 - 1)}},
+		bson.D{{"_id", "MinInt64_overflowVerge"}, {"value", -9.223372036854776832e+18}},
+		bson.D{{"_id", "MinInt64_overflow"}, {"value", -9.223372036854776833e+18}},
+	})
+	fmt.Println("err insert", err)
+
+	//	t.Parallel()
+	/*
+		ctx, collection := setup(t)
+		db := collection.Database()
+	*/
+
+	// db := client.Database("monila")
+	// collectionName := testutil.TableName(t)
+	// collection := db.Collection(collectionName)
+
+	fmt.Printf("*DB > %+v\n", db)
+	fmt.Printf("*collection > %+v\n", collection)
 
 	var actual bson.D
-	err := db.RunCommand(ctx, bson.D{{"listIndexes", "actor"}}).Decode(&actual)
-	fmt.Println(actual, err)
+	err = collection.Database().RunCommand(ctx, bson.D{{"listIndexes", collection}}).Decode(&actual)
+
+	fmt.Println(err)
+	fmt.Printf("*actual > %+v", actual)
 
 	// ctx, collection := setupWithOpts(t, &setupOpts{
 	// 	databaseName: "admin",
