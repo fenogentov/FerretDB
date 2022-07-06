@@ -33,7 +33,7 @@ import (
 func TestQueryComparisonImplicit(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		filter      bson.D
@@ -82,7 +82,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 		},
 		"ArrayEmpty": {
 			filter:      bson.D{{"value", bson.A{}}},
-			expectedIDs: []any{"array-empty"},
+			expectedIDs: []any{"array-empty", "array-empty-nested"},
 		},
 		"ArrayNoSuchField": {
 			filter:      bson.D{{"no-such-field", bson.A{42}}},
@@ -90,7 +90,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 		},
 		"ArrayEmbedded": {
 			filter:      bson.D{{"value", bson.A{bson.A{int32(42), "foo"}, nil}}},
-			expectedIDs: []any{"array-embedded"},
+			expectedIDs: []any{"array-first-embedded"},
 		},
 		"LongArrayEmbedded": {
 			filter:      bson.D{{"value", bson.A{bson.A{int32(42), "foo"}, nil, "foo"}}},
@@ -98,7 +98,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 		},
 		"ArraySlice": {
 			filter:      bson.D{{"value", bson.A{int32(42), "foo"}}},
-			expectedIDs: []any{"array-embedded"},
+			expectedIDs: []any{"array-first-embedded", "array-last-embedded", "array-middle-embedded"},
 		},
 		"ArrayShuffledValues": {
 			filter:      bson.D{{"value", bson.A{"foo", nil, int32(42)}}},
@@ -111,7 +111,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 
 		"Double": {
 			filter:      bson.D{{"value", 42.13}},
-			expectedIDs: []any{"double"},
+			expectedIDs: []any{"array-two", "double"},
 		},
 		"DoubleNegativeInfinity": {
 			filter:      bson.D{{"value", math.Inf(-1)}},
@@ -135,7 +135,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 		},
 		"DoubleNaN": {
 			filter:      bson.D{{"value", math.NaN()}},
-			expectedIDs: []any{"double-nan"},
+			expectedIDs: []any{"array-two", "double-nan"},
 		},
 
 		"String": {
@@ -170,13 +170,17 @@ func TestQueryComparisonImplicit(t *testing.T) {
 			expectedIDs: []any{},
 		},
 		"ValueNull": {
-			filter:      bson.D{{"value", nil}},
-			expectedIDs: []any{"array-embedded", "array-null", "array-three", "array-three-reverse", "null"},
+			filter: bson.D{{"value", nil}},
+			expectedIDs: []any{
+				"array-first-embedded", "array-last-embedded", "array-middle-embedded", "array-null",
+				"array-three", "array-three-reverse", "null",
+			},
 		},
 		"NoSuchFieldNull": {
 			filter: bson.D{{"no-such-field", nil}},
 			expectedIDs: []any{
-				"array", "array-embedded", "array-empty", "array-null", "array-three", "array-three-reverse",
+				"array", "array-embedded", "array-empty", "array-empty-nested", "array-first-embedded", "array-last-embedded",
+				"array-middle-embedded", "array-null", "array-three", "array-three-reverse", "array-two",
 				"binary", "binary-empty",
 				"bool-false", "bool-true",
 				"datetime", "datetime-epoch", "datetime-year-max", "datetime-year-min",
@@ -221,7 +225,7 @@ func TestQueryComparisonImplicit(t *testing.T) {
 func TestQueryComparisonEq(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		filter      bson.D
@@ -258,7 +262,7 @@ func TestQueryComparisonEq(t *testing.T) {
 		},
 		"ArrayEmbedded": {
 			filter:      bson.D{{"value", bson.D{{"$eq", bson.A{bson.A{int32(42), "foo"}, nil}}}}},
-			expectedIDs: []any{"array-embedded"},
+			expectedIDs: []any{"array-first-embedded"},
 		},
 		"LongArrayEmbedded": {
 			filter:      bson.D{{"value", bson.D{{"$eq", bson.A{bson.A{int32(42), "foo"}, nil, "foo"}}}}},
@@ -266,7 +270,7 @@ func TestQueryComparisonEq(t *testing.T) {
 		},
 		"ArraySlice": {
 			filter:      bson.D{{"value", bson.D{{"$eq", bson.A{int32(42), "foo"}}}}},
-			expectedIDs: []any{"array-embedded"},
+			expectedIDs: []any{"array-first-embedded", "array-last-embedded", "array-middle-embedded"},
 		},
 		"ArrayShuffledValues": {
 			filter:      bson.D{{"value", bson.D{{"$eq", bson.A{"foo", nil, int32(42)}}}}},
@@ -282,12 +286,12 @@ func TestQueryComparisonEq(t *testing.T) {
 		},
 		"ArrayEmpty": {
 			filter:      bson.D{{"value", bson.D{{"$eq", bson.A{}}}}},
-			expectedIDs: []any{"array-empty"},
+			expectedIDs: []any{"array-empty", "array-empty-nested"},
 		},
 
 		"Double": {
 			filter:      bson.D{{"value", bson.D{{"$eq", 42.13}}}},
-			expectedIDs: []any{"double"},
+			expectedIDs: []any{"array-two", "double"},
 		},
 		"DoubleWhole": {
 			filter:      bson.D{{"value", bson.D{{"$eq", 42.0}}}},
@@ -319,7 +323,7 @@ func TestQueryComparisonEq(t *testing.T) {
 		},
 		"DoubleNaN": {
 			filter:      bson.D{{"value", bson.D{{"$eq", math.NaN()}}}},
-			expectedIDs: []any{"double-nan"},
+			expectedIDs: []any{"array-two", "double-nan"},
 		},
 		"DoubleBigInt64": {
 			filter:      bson.D{{"value", bson.D{{"$eq", float64(2 << 61)}}}},
@@ -392,8 +396,11 @@ func TestQueryComparisonEq(t *testing.T) {
 		},
 
 		"Null": {
-			filter:      bson.D{{"value", bson.D{{"$eq", nil}}}},
-			expectedIDs: []any{"array-embedded", "array-null", "array-three", "array-three-reverse", "null"},
+			filter: bson.D{{"value", bson.D{{"$eq", nil}}}},
+			expectedIDs: []any{
+				"array-first-embedded", "array-last-embedded", "array-middle-embedded", "array-null", "array-three",
+				"array-three-reverse", "null",
+			},
 		},
 
 		"RegexWithoutOption": {
@@ -467,7 +474,8 @@ func TestQueryComparisonEq(t *testing.T) {
 		"NoSuchFieldNull": {
 			filter: bson.D{{"no-such-field", bson.D{{"$eq", nil}}}},
 			expectedIDs: []any{
-				"array", "array-embedded", "array-empty", "array-null", "array-three", "array-three-reverse",
+				"array", "array-embedded", "array-empty", "array-empty-nested", "array-first-embedded", "array-last-embedded",
+				"array-middle-embedded", "array-null", "array-three", "array-three-reverse", "array-two",
 				"binary", "binary-empty",
 				"bool-false", "bool-true",
 				"datetime", "datetime-epoch", "datetime-year-max", "datetime-year-min",
@@ -502,7 +510,7 @@ func TestQueryComparisonEq(t *testing.T) {
 func TestQueryComparisonGt(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		value       any
@@ -514,7 +522,7 @@ func TestQueryComparisonGt(t *testing.T) {
 		"Double": {
 			value: 41.13,
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-max", "double-positive-infinity", "double-whole",
 				"int32", "int32-max",
 				"int64", "int64-big", "int64-max",
@@ -523,7 +531,7 @@ func TestQueryComparisonGt(t *testing.T) {
 		"DoubleNegativeZero": {
 			value: math.Copysign(0, -1),
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-max", "double-positive-infinity", "double-smallest", "double-whole",
 				"int32", "int32-max",
 				"int64", "int64-big", "int64-max",
@@ -604,6 +612,7 @@ func TestQueryComparisonGt(t *testing.T) {
 		"Int32": {
 			value: int32(42),
 			expectedIDs: []any{
+				"array-two",
 				"double", "double-big", "double-max", "double-positive-infinity",
 				"int32-max",
 				"int64-big", "int64-max",
@@ -633,6 +642,7 @@ func TestQueryComparisonGt(t *testing.T) {
 		"Int64": {
 			value: int64(42),
 			expectedIDs: []any{
+				"array-two",
 				"double", "double-big", "double-max", "double-positive-infinity",
 				"int32-max",
 				"int64-big", "int64-max",
@@ -674,7 +684,7 @@ func TestQueryComparisonGt(t *testing.T) {
 func TestQueryComparisonGte(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		value       any
@@ -686,13 +696,13 @@ func TestQueryComparisonGte(t *testing.T) {
 		"Double": {
 			value: 42.13,
 			expectedIDs: []any{
-				"double", "double-big", "double-max", "double-positive-infinity", "int32-max", "int64-big", "int64-max",
+				"array-two", "double", "double-big", "double-max", "double-positive-infinity", "int32-max", "int64-big", "int64-max",
 			},
 		},
 		"DoubleNegativeZero": {
 			value: math.Copysign(0, -1),
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-max", "double-negative-zero", "double-positive-infinity", "double-smallest", "double-whole", "double-zero",
 				"int32", "int32-max", "int32-zero",
 				"int64", "int64-big", "int64-max", "int64-zero",
@@ -708,7 +718,7 @@ func TestQueryComparisonGte(t *testing.T) {
 		},
 		"DoubleNaN": {
 			value:       math.NaN(),
-			expectedIDs: []any{"double-nan"},
+			expectedIDs: []any{"array-two", "double-nan"},
 		},
 
 		"String": {
@@ -757,8 +767,11 @@ func TestQueryComparisonGte(t *testing.T) {
 		},
 
 		"Null": {
-			value:       nil,
-			expectedIDs: []any{"array-embedded", "array-null", "array-three", "array-three-reverse", "null"},
+			value: nil,
+			expectedIDs: []any{
+				"array-first-embedded", "array-last-embedded", "array-middle-embedded", "array-null", "array-three",
+				"array-three-reverse", "null",
+			},
 		},
 
 		"Regex": {
@@ -773,7 +786,7 @@ func TestQueryComparisonGte(t *testing.T) {
 		"Int32": {
 			value: int32(42),
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-max", "double-positive-infinity", "double-whole",
 				"int32", "int32-max",
 				"int64", "int64-big", "int64-max",
@@ -800,7 +813,7 @@ func TestQueryComparisonGte(t *testing.T) {
 		"Int64": {
 			value: int64(42),
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-max", "double-positive-infinity", "double-whole",
 				"int32", "int32-max",
 				"int64", "int64-big", "int64-max",
@@ -835,7 +848,7 @@ func TestQueryComparisonGte(t *testing.T) {
 func TestQueryComparisonLt(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		value       any
@@ -847,7 +860,7 @@ func TestQueryComparisonLt(t *testing.T) {
 		"Double": {
 			value: 43.13,
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-negative-infinity", "double-negative-zero", "double-smallest", "double-whole", "double-zero",
 				"int32", "int32-min", "int32-zero",
 				"int64", "int64-min", "int64-zero",
@@ -974,7 +987,7 @@ func TestQueryComparisonLt(t *testing.T) {
 		"Int64Big": {
 			value: int64(2<<60 + 1),
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-big", "double-negative-infinity", "double-negative-zero", "double-smallest", "double-whole", "double-zero",
 				"int32", "int32-max", "int32-min", "int32-zero",
 				"int64", "int64-min", "int64-zero",
@@ -1005,7 +1018,7 @@ func TestQueryComparisonLt(t *testing.T) {
 func TestQueryComparisonLte(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		value       any
@@ -1017,7 +1030,7 @@ func TestQueryComparisonLte(t *testing.T) {
 		"Double": {
 			value: 42.13,
 			expectedIDs: []any{
-				"array", "array-three", "array-three-reverse",
+				"array", "array-three", "array-three-reverse", "array-two",
 				"double", "double-negative-infinity", "double-negative-zero", "double-smallest", "double-whole", "double-zero",
 				"int32", "int32-min", "int32-zero",
 				"int64", "int64-min", "int64-zero",
@@ -1045,7 +1058,7 @@ func TestQueryComparisonLte(t *testing.T) {
 		},
 		"DoubleNaN": {
 			value:       math.NaN(),
-			expectedIDs: []any{"double-nan"},
+			expectedIDs: []any{"array-two", "double-nan"},
 		},
 
 		"String": {
@@ -1094,8 +1107,11 @@ func TestQueryComparisonLte(t *testing.T) {
 		},
 
 		"Null": {
-			value:       nil,
-			expectedIDs: []any{"array-embedded", "array-null", "array-three", "array-three-reverse", "null"},
+			value: nil,
+			expectedIDs: []any{
+				"array-first-embedded", "array-last-embedded", "array-middle-embedded", "array-null",
+				"array-three", "array-three-reverse", "null",
+			},
 		},
 
 		"Regex": {
@@ -1172,7 +1188,7 @@ func TestQueryComparisonLte(t *testing.T) {
 func TestQueryComparisonNin(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	var scalarDataTypesFilter bson.A
 	for _, scalarDataType := range shareddata.Scalars.Docs() {
@@ -1190,8 +1206,11 @@ func TestQueryComparisonNin(t *testing.T) {
 		err         *mongo.CommandError
 	}{
 		"ForScalarDataTypes": {
-			value:       scalarDataTypesFilter,
-			expectedIDs: []any{"array-empty", "document", "document-composite", "document-composite-reverse", "document-empty", "document-null"},
+			value: scalarDataTypesFilter,
+			expectedIDs: []any{
+				"array-embedded", "array-empty", "array-empty-nested", "document", "document-composite",
+				"document-composite-reverse", "document-empty", "document-null",
+			},
 		},
 		"ForCompositeDataTypes": {
 			value: compositeDataTypesFilter,
@@ -1222,7 +1241,8 @@ func TestQueryComparisonNin(t *testing.T) {
 		"Regex": {
 			value: bson.A{primitive.Regex{Pattern: "foo", Options: "i"}},
 			expectedIDs: []any{
-				"array", "array-embedded", "array-empty", "array-null",
+				"array", "array-embedded", "array-empty", "array-empty-nested", "array-first-embedded", "array-last-embedded",
+				"array-middle-embedded", "array-null", "array-two",
 				"binary", "binary-empty",
 				"bool-false", "bool-true",
 				"datetime", "datetime-epoch", "datetime-year-max", "datetime-year-min",
@@ -1280,7 +1300,7 @@ func TestQueryComparisonNin(t *testing.T) {
 func TestQueryComparisonIn(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	var scalarDataTypesFilter bson.A
 	for _, scalarDataType := range shareddata.Scalars.Docs() {
@@ -1300,7 +1320,8 @@ func TestQueryComparisonIn(t *testing.T) {
 		"ForScalarDataTypes": {
 			value: scalarDataTypesFilter,
 			expectedIDs: []any{
-				"array", "array-embedded", "array-null", "array-three", "array-three-reverse",
+				"array", "array-first-embedded", "array-last-embedded", "array-middle-embedded", "array-null",
+				"array-three", "array-three-reverse", "array-two",
 				"binary", "binary-empty",
 				"bool-false", "bool-true",
 				"datetime", "datetime-epoch", "datetime-year-max", "datetime-year-min",
@@ -1318,7 +1339,8 @@ func TestQueryComparisonIn(t *testing.T) {
 		"ForCompositeDataTypes": {
 			value: compositeDataTypesFilter,
 			expectedIDs: []any{
-				"array", "array-embedded", "array-empty", "array-null", "array-three", "array-three-reverse",
+				"array", "array-embedded", "array-empty", "array-empty-nested", "array-first-embedded", "array-last-embedded",
+				"array-middle-embedded", "array-null", "array-three", "array-three-reverse", "array-two",
 				"document", "document-composite", "document-composite-reverse", "document-empty", "document-null",
 			},
 		},
@@ -1377,7 +1399,7 @@ func TestQueryComparisonIn(t *testing.T) {
 func TestQueryComparisonNe(t *testing.T) {
 	t.Parallel()
 	providers := []shareddata.Provider{shareddata.Scalars, shareddata.Composites}
-	ctx, collection := setup(t, providers...)
+	ctx, collection := Setup(t, providers...)
 
 	for name, tc := range map[string]struct {
 		value        any
@@ -1399,7 +1421,7 @@ func TestQueryComparisonNe(t *testing.T) {
 		},
 		"ArrayEmbedded": {
 			value:        bson.A{bson.A{int32(42), "foo"}, nil},
-			unexpectedID: "array-embedded",
+			unexpectedID: "array-first-embedded",
 		},
 		"LongArrayEmbedded": {
 			value:        bson.A{bson.A{int32(42), "foo"}, nil, "foo"},
@@ -1574,7 +1596,7 @@ func TestQueryComparisonNe(t *testing.T) {
 
 func TestQueryComparisonMultipleOperators(t *testing.T) {
 	t.Parallel()
-	ctx, collection := setup(t, shareddata.Scalars, shareddata.Composites)
+	ctx, collection := Setup(t, shareddata.Scalars, shareddata.Composites)
 
 	for name, tc := range map[string]struct {
 		filter      any

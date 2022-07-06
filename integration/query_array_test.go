@@ -30,7 +30,7 @@ import (
 
 func TestQueryArraySize(t *testing.T) {
 	t.Parallel()
-	ctx, collection := setup(t)
+	ctx, collection := Setup(t)
 
 	_, err := collection.InsertMany(ctx, []any{
 		bson.D{{"_id", "array-empty"}, {"value", bson.A{}}},
@@ -143,7 +143,7 @@ func TestQueryArraySize(t *testing.T) {
 
 func TestQueryArrayDotNotation(t *testing.T) {
 	t.Parallel()
-	ctx, collection := setup(t, shareddata.Scalars, shareddata.Composites)
+	ctx, collection := Setup(t, shareddata.Scalars, shareddata.Composites)
 
 	for name, tc := range map[string]struct {
 		filter      bson.D
@@ -156,20 +156,24 @@ func TestQueryArrayDotNotation(t *testing.T) {
 		},
 		"PositionIndexAtTheEndOfArray": {
 			filter:      bson.D{{"value.1", bson.D{{"$type", "double"}}}},
-			expectedIDs: []any{},
+			expectedIDs: []any{"array-two"},
 		},
 
 		"PositionTypeNull": {
 			filter:      bson.D{{"value.0", bson.D{{"$type", "null"}}}},
-			expectedIDs: []any{"array-null", "array-three-reverse"},
+			expectedIDs: []any{"array-last-embedded", "array-middle-embedded", "array-null", "array-three-reverse"},
 		},
 		"PositionRegex": {
 			filter:      bson.D{{"value.1", primitive.Regex{Pattern: "foo"}}},
 			expectedIDs: []any{"array-three", "array-three-reverse"},
 		},
 		"PositionArray": {
-			filter:      bson.D{{"value.0", primitive.A{}}},
-			expectedIDs: []any{},
+			filter:      bson.D{{"value.0", bson.A{"42", "foo"}}},
+			expectedIDs: []any{"array-embedded"},
+		},
+		"PositionArrayEmpty": {
+			filter:      bson.D{{"value.0", bson.A{}}},
+			expectedIDs: []any{"array-empty-nested"},
 		},
 
 		"NoSuchFieldPosition": {
@@ -212,9 +216,194 @@ func TestQueryArrayDotNotation(t *testing.T) {
 
 			cursor, err := collection.Find(ctx, tc.filter, options.Find().SetSort(bson.D{{"_id", 1}}))
 			if tc.err != nil {
+				require.Nil(t, tc.expectedIDs)
 				AssertEqualError(t, *tc.err, err)
 				return
 			}
+			require.NoError(t, err)
+
+			var actual []bson.D
+			err = cursor.All(ctx, &actual)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedIDs, CollectIDs(t, actual))
+		})
+	}
+}
+
+func TestQueryElemMatchOperator(t *testing.T) {
+	t.Parallel()
+	ctx, collection := Setup(t, shareddata.Scalars, shareddata.Composites)
+
+	for name, tc := range map[string]struct {
+		filter      bson.D
+		expectedIDs []any
+		err         *mongo.CommandError
+	}{
+		"DoubleTarget": {
+			filter: bson.D{
+				{"_id", "double"},
+				{"value", bson.D{{"$elemMatch", bson.D{{"$gt", int32(0)}}}}},
+			},
+			expectedIDs: []any{},
+		},
+		"GtZero": {
+			filter:      bson.D{{"value", bson.D{{"$elemMatch", bson.D{{"$gt", int32(0)}}}}}},
+			expectedIDs: []any{"array", "array-three", "array-three-reverse", "array-two"},
+		},
+		"GtZeroWithTypeArray": {
+			filter: bson.D{
+				{"value", bson.D{
+					{"$elemMatch", bson.D{
+						{"$gt", int32(0)},
+					}},
+					{"$type", "array"},
+				}},
+			},
+			expectedIDs: []any{"array", "array-three", "array-three-reverse", "array-two"},
+		},
+		"GtZeroWithTypeString": {
+			filter: bson.D{
+				{"value", bson.D{
+					{"$elemMatch", bson.D{
+						{"$gt", int32(0)},
+					}},
+					{"$type", "string"},
+				}},
+			},
+			expectedIDs: []any{"array-three", "array-three-reverse"},
+		},
+		"GtLt": {
+			filter: bson.D{
+				{"value", bson.D{
+					{"$elemMatch", bson.D{
+						{"$gt", int32(0)},
+						{"$lt", int32(43)},
+					}},
+				}},
+			},
+			expectedIDs: []any{"array", "array-three", "array-three-reverse", "array-two"},
+		},
+
+		"UnexpectedFilterString": {
+			filter: bson.D{{"value", bson.D{{"$elemMatch", "foo"}}}},
+			err: &mongo.CommandError{
+				Code:    2,
+				Name:    "BadValue",
+				Message: "$elemMatch needs an Object",
+			},
+		},
+		"WhereInsideElemMatch": {
+			filter: bson.D{{"value", bson.D{{"$elemMatch", bson.D{{"$where", "123"}}}}}},
+			err: &mongo.CommandError{
+				Code:    2,
+				Name:    "BadValue",
+				Message: "$where can only be applied to the top-level document",
+			},
+		},
+		"TextInsideElemMatch": {
+			filter: bson.D{{"value", bson.D{{"$elemMatch", bson.D{{"$text", "123"}}}}}},
+			err: &mongo.CommandError{
+				Code:    2,
+				Name:    "BadValue",
+				Message: "$text can only be applied to the top-level document",
+			},
+		},
+		"GtField": {
+			filter: bson.D{{"value", bson.D{
+				{
+					"$elemMatch",
+					bson.D{
+						{"$gt", int32(0)},
+						{"foo", int32(42)},
+					},
+				},
+			}}},
+			err: &mongo.CommandError{
+				Code:    2,
+				Name:    "BadValue",
+				Message: "unknown operator: foo",
+			},
+		},
+	} {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			cursor, err := collection.Find(ctx, tc.filter, options.Find().SetSort(bson.D{{"_id", 1}}))
+			if tc.err != nil {
+				require.Nil(t, tc.expectedIDs)
+				AssertEqualError(t, *tc.err, err)
+				return
+			}
+			require.NoError(t, err)
+
+			var actual []bson.D
+			err = cursor.All(ctx, &actual)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedIDs, CollectIDs(t, actual))
+		})
+	}
+}
+
+func TestArrayEquality(t *testing.T) {
+	t.Parallel()
+	ctx, collection := Setup(t, shareddata.Composites)
+
+	for name, tc := range map[string]struct {
+		array       bson.A
+		expectedIDs []any
+	}{
+		"One": {
+			array:       bson.A{int32(42)},
+			expectedIDs: []any{"array"},
+		},
+		"Two": {
+			array:       bson.A{42, "foo"},
+			expectedIDs: []any{"array-first-embedded", "array-last-embedded", "array-middle-embedded"},
+		},
+		"Three": {
+			array:       bson.A{int32(42), "foo", nil},
+			expectedIDs: []any{"array-three"},
+		},
+		"Three-reverse": {
+			array:       bson.A{nil, "foo", int32(42)},
+			expectedIDs: []any{"array-three-reverse"},
+		},
+		"Empty": {
+			array:       bson.A{},
+			expectedIDs: []any{"array-empty", "array-empty-nested"},
+		},
+		"Null": {
+			array:       bson.A{nil},
+			expectedIDs: []any{"array-null"},
+		},
+		"EmptyNested": {
+			array:       bson.A{bson.A{}},
+			expectedIDs: []any{"array-empty-nested"},
+		},
+		"OneEmbedded": {
+			array:       bson.A{bson.A{"42", "foo"}},
+			expectedIDs: []any{"array-embedded"},
+		},
+		"FirstEmbedded": {
+			array:       bson.A{bson.A{int32(42), "foo"}, nil},
+			expectedIDs: []any{"array-first-embedded"},
+		},
+		"MiddleEmbedded": {
+			array:       bson.A{nil, bson.A{int32(42), "foo"}, nil},
+			expectedIDs: []any{"array-middle-embedded"},
+		},
+		"LastEmbedded": {
+			array:       bson.A{nil, bson.A{int32(42), "foo"}},
+			expectedIDs: []any{"array-last-embedded"},
+		},
+	} {
+		name, tc := name, tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			filter := bson.D{{"value", tc.array}}
+			cursor, err := collection.Find(ctx, filter, options.Find().SetSort(bson.D{{"_id", 1}}))
 			require.NoError(t, err)
 
 			var actual []bson.D
