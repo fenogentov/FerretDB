@@ -115,6 +115,8 @@ var (
 	errNotBinaryMask         = fmt.Errorf("not a binary mask")
 	errUnexpectedLeftOpType  = fmt.Errorf("unexpected left operand type")
 	errUnexpectedRightOpType = fmt.Errorf("unexpected right operand type")
+
+//	errEmptyUpdatePath       = fmt.Errorf("empty update path")
 )
 
 // GetWholeNumberParam checks if the given value is int32, int64, or float64 containing a whole number,

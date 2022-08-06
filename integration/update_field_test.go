@@ -281,10 +281,10 @@ func TestUpdateFieldCurrentDate(t *testing.T) {
 func TestUpdateFieldInc(t *testing.T) {
 	setup.SkipForTigris(t)
 
-	t.Parallel()
+	//	t.Parallel()
 
 	t.Run("Ok", func(t *testing.T) {
-		t.Parallel()
+		//	t.Parallel()
 
 		for name, tc := range map[string]struct {
 			filter   bson.D
@@ -297,232 +297,232 @@ func TestUpdateFieldInc(t *testing.T) {
 				update:   bson.D{{"$inc", bson.D{{"v", float64(42.13)}}}},
 				expected: bson.D{{"_id", "double"}, {"v", float64(84.26)}},
 			},
-			"DoubleIncrementNaN": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.NaN()}}}},
-				expected: bson.D{{"_id", "double"}, {"v", math.NaN()}},
-			},
-			"DoubleIncrementPlusInfinity": {
-				filter:   bson.D{{"_id", "double-nan"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.Inf(+1)}}}},
-				expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
-			},
-			"DoubleNegativeIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", float64(-42.13)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(0)}},
-			},
-			"DoubleIncrementIntField": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"v", float64(1.13)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", float64(43.13)}},
-			},
-			"DoubleIncrementLongField": {
-				filter:   bson.D{{"_id", "int64"}},
-				update:   bson.D{{"$inc", bson.D{{"v", float64(1.13)}}}},
-				expected: bson.D{{"_id", "int64"}, {"v", float64(43.13)}},
-			},
-			"DoubleIntIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
-			},
-			"DoubleLongIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
-			},
-			"DoubleDoubleMaxIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.MaxFloat64}}}},
-				expected: bson.D{{"_id", "double"}, {"v", math.MaxFloat64}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleDoubleNaNIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.NaN()}}}},
-				expected: bson.D{{"_id", "double"}, {"v", math.NaN()}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleDoublePositiveInfinityIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.Inf(+1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", math.Inf(+1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleDoubleNegativeInfinityIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", math.Inf(-1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", math.Inf(-1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleDoubleBigIncrement": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", float64(2 << 60)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(2 << 60)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleBigDoubleIncrement": {
-				filter:   bson.D{{"_id", "double-big"}},
-				update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
-				expected: bson.D{{"_id", "double-big"}, {"v", float64(2 << 60)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleMaxDoublePositiveIncrement": {
-				filter:   bson.D{{"_id", "double-max"}},
-				update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
-				expected: bson.D{{"_id", "double-max"}, {"v", math.MaxFloat64}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleMaxDoubleNegativeIncrement": {
-				filter:   bson.D{{"_id", "double-max"}},
-				update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
-				expected: bson.D{{"_id", "double-max"}, {"v", math.MaxFloat64}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleNaNDoublePositiveIncrement": {
-				filter:   bson.D{{"_id", "double-nan"}},
-				update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
-				expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleNaNDoubleNegativeIncrement": {
-				filter:   bson.D{{"_id", "double-nan"}},
-				update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
-				expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 1,
-					UpsertedCount: 0,
-				},
-			},
-			"DoublePositiveInfinityPositiveIncrement": {
-				filter:   bson.D{{"_id", "double-positive-infinity"}},
-				update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
-				expected: bson.D{{"_id", "double-positive-infinity"}, {"v", math.Inf(+1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoublePositiveInfinityNegativeIncrement": {
-				filter:   bson.D{{"_id", "double-positive-infinity"}},
-				update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
-				expected: bson.D{{"_id", "double-positive-infinity"}, {"v", math.Inf(+1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleNegativeInfinityPositiveIncrement": {
-				filter:   bson.D{{"_id", "double-negative-infinity"}},
-				update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
-				expected: bson.D{{"_id", "double-negative-infinity"}, {"v", math.Inf(-1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"DoubleNegativeInfinityNegativeIncrement": {
-				filter:   bson.D{{"_id", "double-negative-infinity"}},
-				update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
-				expected: bson.D{{"_id", "double-negative-infinity"}, {"v", math.Inf(-1)}},
-				stat: &mongo.UpdateResult{
-					MatchedCount:  1,
-					ModifiedCount: 0,
-					UpsertedCount: 0,
-				},
-			},
-			"IntIncrement": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", int32(43)}},
-			},
-			"IntNegativeIncrement": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int32(-1)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", int32(41)}},
-			},
-			"IntIncrementDoubleField": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
-			},
-			"IntIncrementLongField": {
-				filter:   bson.D{{"_id", "int64"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				expected: bson.D{{"_id", "int64"}, {"v", int64(43)}},
-			},
-			"LongIncrement": {
-				filter:   bson.D{{"_id", "int64"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
-				expected: bson.D{{"_id", "int64"}, {"v", int64(43)}},
-			},
-			"LongNegativeIncrement": {
-				filter:   bson.D{{"_id", "int64"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int64(-1)}}}},
-				expected: bson.D{{"_id", "int64"}, {"v", int64(41)}},
-			},
-			"LongIncrementDoubleField": {
-				filter:   bson.D{{"_id", "double"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
-				expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
-			},
-			"LongIncrementIntField": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", int64(43)}},
-			},
+			// "DoubleIncrementNaN": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.NaN()}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", math.NaN()}},
+			// },
+			// "DoubleIncrementPlusInfinity": {
+			// 	filter:   bson.D{{"_id", "double-nan"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.Inf(+1)}}}},
+			// 	expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
+			// },
+			// "DoubleNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", float64(-42.13)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(0)}},
+			// },
+			// "DoubleIncrementIntField": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", float64(1.13)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", float64(43.13)}},
+			// },
+			// "DoubleIncrementLongField": {
+			// 	filter:   bson.D{{"_id", "int64"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", float64(1.13)}}}},
+			// 	expected: bson.D{{"_id", "int64"}, {"v", float64(43.13)}},
+			// },
+			// "DoubleIntIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
+			// },
+			// "DoubleLongIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
+			// },
+			// "DoubleDoubleMaxIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.MaxFloat64}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", math.MaxFloat64}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleDoubleNaNIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.NaN()}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", math.NaN()}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleDoublePositiveInfinityIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.Inf(+1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", math.Inf(+1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleDoubleNegativeInfinityIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", math.Inf(-1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", math.Inf(-1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleDoubleBigIncrement": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", float64(2 << 60)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(2 << 60)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleBigDoubleIncrement": {
+			// 	filter:   bson.D{{"_id", "double-big"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
+			// 	expected: bson.D{{"_id", "double-big"}, {"v", float64(2 << 60)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleMaxDoublePositiveIncrement": {
+			// 	filter:   bson.D{{"_id", "double-max"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
+			// 	expected: bson.D{{"_id", "double-max"}, {"v", math.MaxFloat64}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleMaxDoubleNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "double-max"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
+			// 	expected: bson.D{{"_id", "double-max"}, {"v", math.MaxFloat64}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleNaNDoublePositiveIncrement": {
+			// 	filter:   bson.D{{"_id", "double-nan"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
+			// 	expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleNaNDoubleNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "double-nan"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
+			// 	expected: bson.D{{"_id", "double-nan"}, {"v", math.NaN()}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 1,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoublePositiveInfinityPositiveIncrement": {
+			// 	filter:   bson.D{{"_id", "double-positive-infinity"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
+			// 	expected: bson.D{{"_id", "double-positive-infinity"}, {"v", math.Inf(+1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoublePositiveInfinityNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "double-positive-infinity"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
+			// 	expected: bson.D{{"_id", "double-positive-infinity"}, {"v", math.Inf(+1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleNegativeInfinityPositiveIncrement": {
+			// 	filter:   bson.D{{"_id", "double-negative-infinity"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", 42.13}}}},
+			// 	expected: bson.D{{"_id", "double-negative-infinity"}, {"v", math.Inf(-1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "DoubleNegativeInfinityNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "double-negative-infinity"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", -42.13}}}},
+			// 	expected: bson.D{{"_id", "double-negative-infinity"}, {"v", math.Inf(-1)}},
+			// 	stat: &mongo.UpdateResult{
+			// 		MatchedCount:  1,
+			// 		ModifiedCount: 0,
+			// 		UpsertedCount: 0,
+			// 	},
+			// },
+			// "IntIncrement": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", int32(43)}},
+			// },
+			// "IntNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int32(-1)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", int32(41)}},
+			// },
+			// "IntIncrementDoubleField": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
+			// },
+			// "IntIncrementLongField": {
+			// 	filter:   bson.D{{"_id", "int64"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "int64"}, {"v", int64(43)}},
+			// },
+			// "LongIncrement": {
+			// 	filter:   bson.D{{"_id", "int64"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
+			// 	expected: bson.D{{"_id", "int64"}, {"v", int64(43)}},
+			// },
+			// "LongNegativeIncrement": {
+			// 	filter:   bson.D{{"_id", "int64"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int64(-1)}}}},
+			// 	expected: bson.D{{"_id", "int64"}, {"v", int64(41)}},
+			// },
+			// "LongIncrementDoubleField": {
+			// 	filter:   bson.D{{"_id", "double"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
+			// 	expected: bson.D{{"_id", "double"}, {"v", float64(43.13)}},
+			// },
+			// "LongIncrementIntField": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", int64(43)}},
+			// },
 
-			"FieldNotExist": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"foo", int32(1)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", int32(42)}, {"foo", int32(1)}},
-			},
-			"IncTwoFields": {
-				filter:   bson.D{{"_id", "int32"}},
-				update:   bson.D{{"$inc", bson.D{{"foo", int32(12)}, {"v", int32(1)}}}},
-				expected: bson.D{{"_id", "int32"}, {"v", int32(43)}, {"foo", int32(12)}},
-			},
+			// "FieldNotExist": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"foo", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", int32(42)}, {"foo", int32(1)}},
+			// },
+			// "IncTwoFields": {
+			// 	filter:   bson.D{{"_id", "int32"}},
+			// 	update:   bson.D{{"$inc", bson.D{{"foo", int32(12)}, {"v", int32(1)}}}},
+			// 	expected: bson.D{{"_id", "int32"}, {"v", int32(43)}, {"foo", int32(12)}},
+			// },
 		} {
 			name, tc := name, tc
 			t.Run(name, func(t *testing.T) {
@@ -554,73 +554,81 @@ func TestUpdateFieldInc(t *testing.T) {
 			err    *mongo.WriteError
 			alt    string
 		}{
-			"IncOnDocument": {
-				filter: bson.D{{"_id", "document"}},
-				update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				err: &mongo.WriteError{
-					Code: 14,
-					Message: `Cannot apply $inc to a value of non-numeric type. ` +
-						`{_id: "document"} has the field 'v' of non-numeric type object`,
-				},
-			},
-			"IncOnArray": {
-				filter: bson.D{{"_id", "array"}},
-				update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				err: &mongo.WriteError{
-					Code: 14,
-					Message: `Cannot apply $inc to a value of non-numeric type. ` +
-						`{_id: "array"} has the field 'v' of non-numeric type array`,
-				},
-			},
-			"IncOnString": {
+			// "IncOnDocument": {
+			// 	filter: bson.D{{"_id", "document"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 14,
+			// 		Message: `Cannot apply $inc to a value of non-numeric type. ` +
+			// 			`{_id: "document"} has the field 'v' of non-numeric type object`,
+			// 	},
+			// },
+			// "IncOnArray": {
+			// 	filter: bson.D{{"_id", "array"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 14,
+			// 		Message: `Cannot apply $inc to a value of non-numeric type. ` +
+			// 			`{_id: "array"} has the field 'v' of non-numeric type array`,
+			// 	},
+			// },
+			// "IncOnString": {
+			// 	filter: bson.D{{"_id", "string"}},
+			// 	update: bson.D{{"$inc", "string"}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 9,
+			// 		Message: `Modifiers operate on fields but we found type string instead.` +
+			// 			` For example: {$mod: {<field>: ...}} not {$inc: "string"}`,
+			// 	},
+			// 	alt: "Modifiers operate on fields but we found another type instead",
+			// },
+			// "IncWithStringValue": {
+			// 	filter: bson.D{{"_id", "string"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", "bad value"}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code:    14,
+			// 		Message: `Cannot increment with non-numeric argument: {v: "bad value"}`,
+			// 	},
+			// },
+			// "DoubleIncOnNullValue": {
+			// 	filter: bson.D{{"_id", "string"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", float64(1)}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 14,
+			// 		Message: `Cannot apply $inc to a value of non-numeric type. ` +
+			// 			`{_id: "string"} has the field 'v' of non-numeric type string`,
+			// 	},
+			// },
+			// "IntIncOnNullValue": {
+			// 	filter: bson.D{{"_id", "string"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 14,
+			// 		Message: `Cannot apply $inc to a value of non-numeric type. ` +
+			// 			`{_id: "string"} has the field 'v' of non-numeric type string`,
+			// 	},
+			// },
+			// "LongIncOnNullValue": {
+			// 	filter: bson.D{{"_id", "string"}},
+			// 	update: bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
+			// 	err: &mongo.WriteError{
+			// 		Code: 14,
+			// 		Message: `Cannot apply $inc to a value of non-numeric type. ` +
+			// 			`{_id: "string"} has the field 'v' of non-numeric type string`,
+			// 	},
+			// },
+			"EmptyUpdatePath": {
 				filter: bson.D{{"_id", "string"}},
-				update: bson.D{{"$inc", "string"}},
+				update: bson.D{{"$inc", bson.D{{}}}},
 				err: &mongo.WriteError{
-					Code: 9,
-					Message: `Modifiers operate on fields but we found type string instead.` +
-						` For example: {$mod: {<field>: ...}} not {$inc: "string"}`,
-				},
-				alt: "Modifiers operate on fields but we found another type instead",
-			},
-			"IncWithStringValue": {
-				filter: bson.D{{"_id", "string"}},
-				update: bson.D{{"$inc", bson.D{{"v", "bad value"}}}},
-				err: &mongo.WriteError{
-					Code:    14,
-					Message: `Cannot increment with non-numeric argument: {v: "bad value"}`,
-				},
-			},
-			"DoubleIncOnNullValue": {
-				filter: bson.D{{"_id", "string"}},
-				update: bson.D{{"$inc", bson.D{{"v", float64(1)}}}},
-				err: &mongo.WriteError{
-					Code: 14,
-					Message: `Cannot apply $inc to a value of non-numeric type. ` +
-						`{_id: "string"} has the field 'v' of non-numeric type string`,
-				},
-			},
-			"IntIncOnNullValue": {
-				filter: bson.D{{"_id", "string"}},
-				update: bson.D{{"$inc", bson.D{{"v", int32(1)}}}},
-				err: &mongo.WriteError{
-					Code: 14,
-					Message: `Cannot apply $inc to a value of non-numeric type. ` +
-						`{_id: "string"} has the field 'v' of non-numeric type string`,
-				},
-			},
-			"LongIncOnNullValue": {
-				filter: bson.D{{"_id", "string"}},
-				update: bson.D{{"$inc", bson.D{{"v", int64(1)}}}},
-				err: &mongo.WriteError{
-					Code: 14,
-					Message: `Cannot apply $inc to a value of non-numeric type. ` +
-						`{_id: "string"} has the field 'v' of non-numeric type string`,
+					Code:    56,
+					Message: `An empty update path is not valid.`,
 				},
 			},
 		} {
 			name, tc := name, tc
 			t.Run(name, func(t *testing.T) {
-				t.Parallel()
+				//				t.Parallel()
 				ctx, collection := setup.Setup(t, shareddata.Scalars, shareddata.Composites)
 
 				_, err := collection.UpdateOne(ctx, tc.filter, tc.update)
